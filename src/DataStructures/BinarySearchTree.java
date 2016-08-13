@@ -12,14 +12,15 @@ public class BinarySearchTree {
 
     private class Node {
         private int value;
-        private Node parent;
-        private Node leftChild;
-        private Node rightChild;
-        public Node(int v, Node p, Node lc, Node rc){
+        private Node parent = null;
+        private Node leftChild = null;
+        private Node rightChild = null;
+        public Node(int v, Node p, Node lc, Node rc, Node par){
             value = v;
             parent = p;
             leftChild = lc;
             rightChild = rc;
+            parent = par;
         }
     }
 
@@ -52,23 +53,20 @@ public class BinarySearchTree {
         }
     }
 
-    private int bstSize = 0;
     private Node root;
 
-    public int getMin(){
-        Node current = root;
+    public Node getMin(Node current){
         while(current.leftChild != null){
             current = current.leftChild;
         }
-        return current.value;
+        return current;
     }
 
-    public int getMax(){
-        Node current = root;
+    public Node getMax(Node current){
         while(current.rightChild != null){
             current = current.rightChild;
         }
-        return current.value;
+        return current;
     }
 
     // Note, this approach ignores duplicates, as that seems to be a common convention
@@ -76,37 +74,67 @@ public class BinarySearchTree {
     // rule or add a counter or a list on Node for duplicates
     public void addNode(int newValue){
         if (root == null) {
-            root = new Node(newValue, null, null, null);
+            root = new Node(newValue, null, null, null, null);
             return;
+        } else {
+            addNodeUtil(newValue, root);
         }
+    }
 
-        Node current = root;
-        while (current != null) {
-            if (newValue == current.leftChild.value || newValue == current.rightChild.value){
-                return;
-            } else if (newValue < current.value){
-                if (current.leftChild != null){
-                    current = current.leftChild;
-                } else {
-                    current.leftChild = new Node(newValue, current, null, null);
-                }
+    // My Kingdom for default parameter values...
+    public void addNodeUtil(int val, Node current){
+        if (val < current.value){
+            if (current.leftChild == null){
+                current.leftChild = new Node(val, current, null, null, current);
             } else {
-                if (current.rightChild != null){
-                    current = current.rightChild;
-                } else {
-                    current.rightChild = new Node(newValue, current, null, null);
-                }
+                addNodeUtil(val, current.leftChild);
+            }
+        } else {
+            if (current.rightChild == null) {
+                current.rightChild = new Node(val, current, null, null, current);
+            } else {
+                addNodeUtil(val, current.rightChild);
             }
         }
     }
 
-    public int deleteNode(int value){
-        // Find node by giving DFS a target
-        Node nodeForDelete = binarySearch(value, root);
+    public void deleteNode(int value){
+        deleteNodeUtil(value, root);
+    }
+
+    // This could probably use a refactor.  It isn't very readable.
+    public void deleteNodeUtil(int value, Node nodeForDelete){
+        // Recurse to deletion point
         if (nodeForDelete == null){
-            throw new Error("Node could not be found in tree");
+            return;
+        } else if (value < nodeForDelete.value){
+            deleteNodeUtil(value, nodeForDelete.leftChild);
+        } else if (value > nodeForDelete.value){
+            deleteNodeUtil(value, nodeForDelete.rightChild);
+        } else if (value == nodeForDelete.value) {
+            // Now that we're at the deletion point we can handle our 3 cases
+            if (nodeForDelete != null && nodeForDelete.leftChild != null && nodeForDelete.rightChild != null) {
+                nodeForDelete = getMin(nodeForDelete.leftChild);
+                deleteNodeUtil(nodeForDelete.value, nodeForDelete);
+            } else if (nodeForDelete.leftChild != null) {
+                replaceNodeForParent(nodeForDelete, nodeForDelete.leftChild);
+            } else if (nodeForDelete.rightChild != null){
+                replaceNodeForParent(nodeForDelete, nodeForDelete.rightChild);
+            } else {
+                replaceNodeForParent(nodeForDelete, null);
+            }
+
         }
-        return value;
+    }
+
+    private void replaceNodeForParent(Node replaced, Node replacement){
+        if (replaced.parent.leftChild == replaced){ // Note: compares reference, not content
+            replaced.parent.leftChild = replacement;
+            replaced = null;
+        } else if (replaced.parent.rightChild == replaced){
+            replaced.parent.rightChild = replacement;
+            replaced = null;
+        }
     }
 
     public Node binarySearch(int target){ return binarySearch(target, root); }
@@ -120,13 +148,9 @@ public class BinarySearchTree {
         }
     }
 
-    public int getTreeSize(){
-        return bstSize;
-    }
-
     /* returns true if given search tree is binary
  search tree (efficient version) */
-    boolean isBST()  {
+    public boolean isBST()  {
         return isBSTUtil(root, Integer.MIN_VALUE,
                 Integer.MAX_VALUE);
     }
@@ -134,7 +158,7 @@ public class BinarySearchTree {
     // *** FROM http://www.geeksforgeeks.org/a-program-to-check-if-a-binary-tree-is-bst-or-not/ cause I'm lazy
     /* Returns true if the given tree is a BST and its
       values are >= min and <= max. */
-    boolean isBSTUtil(Node node, int min, int max)
+    private boolean isBSTUtil(Node node, int min, int max)
     {
         /* an empty tree is BST */
         if (node == null)
@@ -149,5 +173,13 @@ public class BinarySearchTree {
         // Allow only distinct values
         return (isBSTUtil(node.leftChild, min, node.value - 1) &&
                 isBSTUtil(node.rightChild, node.value + 1, max));
+    }
+
+    public void bstCheck(){
+        if ( isBST() ){
+            System.out.println("BST is proper");
+        } else {
+            System.out.println("BST MALFORMED");
+        }
     }
 }
