@@ -1,4 +1,5 @@
 import DataStructures.BinarySearchTree;
+import Algorithms.Graph.TopologicalSort;
 
 import java.util.Scanner;
 
@@ -28,8 +29,7 @@ public class JavaPlayground {
                     binTree.bstCheck();
                     break;
                 case "2":
-                    p("Goodbye");
-                    running = false;
+                    TopologicalSort.test();
                     break;
             }
         }
