@@ -54,5 +54,7 @@ public class TopologicalSort<T> {
         while(!result.isEmpty()){
             System.out.println(result.poll());
         }
+
+        // should print out 5, 6, 1, 2, 3, 8, 11, 4
     }
 }
